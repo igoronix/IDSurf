@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="IDSurf" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="HPI-UW-3W3">
+                                <rect key="frame" x="-4" y="20" width="328" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="m26-Ai-spL"/>
+                                </constraints>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="BYZ-38-t0r" id="wRr-LB-r3a"/>
+                                </connections>
+                            </searchBar>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zob-fz-qo6">
+                                <rect key="frame" x="-4" y="64" width="328" height="372"/>
+                                <subviews>
+                                    <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="2Pd-0d-XNs">
+                                        <rect key="frame" x="0.0" y="-2" width="328" height="2"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="2" id="bvR-6D-Kh0"/>
+                                        </constraints>
+                                    </progressView>
+                                </subviews>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstItem="2Pd-0d-XNs" firstAttribute="top" secondItem="zob-fz-qo6" secondAttribute="top" constant="-2" id="Fqw-ul-FjK"/>
+                                    <constraint firstItem="2Pd-0d-XNs" firstAttribute="leading" secondItem="zob-fz-qo6" secondAttribute="leading" id="xJD-b6-5Ud"/>
+                                    <constraint firstAttribute="trailing" secondItem="2Pd-0d-XNs" secondAttribute="trailing" id="xty-v0-z7v"/>
+                                </constraints>
+                            </view>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5vX-hn-ttF">
+                                <rect key="frame" x="-4" y="436" width="328" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="MHr-M1-I3I"/>
+                                </constraints>
+                                <items>
+                                    <barButtonItem title="&lt;" width="35" id="wUX-BL-ITf"/>
+                                    <barButtonItem title="&gt;" width="35" id="luT-2K-pDW"/>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="5Ka-SY-ThQ"/>
+                                    <barButtonItem systemItem="bookmarks" id="jm3-e8-LeD"/>
+                                </items>
+                            </toolbar>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailingMargin" secondItem="5vX-hn-ttF" secondAttribute="trailing" constant="-20" id="4Ai-zL-b8N"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="5vX-hn-ttF" secondAttribute="bottom" id="Euo-4C-o05"/>
+                            <constraint firstItem="HPI-UW-3W3" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-20" id="KlN-Lw-OMY"/>
+                            <constraint firstItem="5vX-hn-ttF" firstAttribute="top" secondItem="zob-fz-qo6" secondAttribute="bottom" id="NSS-Dp-xcP"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="HPI-UW-3W3" secondAttribute="trailing" constant="-20" id="VDu-oy-T9y"/>
+                            <constraint firstItem="HPI-UW-3W3" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="topMargin" constant="20" id="WfW-NL-NVZ"/>
+                            <constraint firstItem="zob-fz-qo6" firstAttribute="top" secondItem="HPI-UW-3W3" secondAttribute="bottom" id="bh7-hN-2wZ"/>
+                            <constraint firstItem="zob-fz-qo6" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-20" id="dXX-xV-K36"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="zob-fz-qo6" secondAttribute="trailing" constant="-20" id="hdf-gN-1PS"/>
+                            <constraint firstItem="HPI-UW-3W3" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="topMargin" id="uvu-6d-k2M"/>
+                            <constraint firstItem="5vX-hn-ttF" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-20" id="x8I-cD-xKj"/>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="uvu-6d-k2M"/>
+                            </mask>
+                        </variation>
+                    </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <outlet property="containerView" destination="zob-fz-qo6" id="wLE-nf-KZI"/>
+                        <outlet property="progressView" destination="2Pd-0d-XNs" id="qEP-Mg-LLi"/>
+                        <outlet property="searchBar" destination="HPI-UW-3W3" id="p3m-28-VGV"/>
+                        <outlet property="toolBar" destination="5vX-hn-ttF" id="eci-Cq-9lC"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="565" y="490"/>
+        </scene>
+    </scenes>
+</document>
