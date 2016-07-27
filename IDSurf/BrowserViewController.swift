@@ -11,7 +11,7 @@ import WebKit
 
 private var IDSurfContext = 0
 
-class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISearchBarDelegate, HistoryViewControllerDelegate {
+class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISearchBarDelegate, HistoryViewControllerDelegate {
     
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var containerView: UIView!
