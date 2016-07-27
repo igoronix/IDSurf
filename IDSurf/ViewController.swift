@@ -11,22 +11,31 @@ import WebKit
 
 private var IDSurfContext = 0
 
-class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISearchBarDelegate {
+class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISearchBarDelegate, HistoryViewControllerDelegate {
     
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var toolBar: UIToolbar!
     
-    var webView : WKWebView!
+    @IBOutlet weak var backButton: UIBarButtonItem!
+    @IBOutlet weak var forwardButton: UIBarButtonItem!
+    @IBOutlet weak var historyButton: UIBarButtonItem!
+    
+    weak var webView : WKWebView!
+    
+    var visitedURL: [(url:NSURL, title: String?)] = []
+    
+    //MARK:- ViewController lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.webView = WKWebView(frame: self.containerView.bounds, configuration: WKWebViewConfiguration())
-        self.webView.UIDelegate = self
-        self.webView.navigationDelegate = self
-        self.containerView.addSubview(self.webView)
+        let webView = WKWebView(frame: self.containerView.bounds, configuration: WKWebViewConfiguration())
+        webView.UIDelegate = self
+        webView.navigationDelegate = self
+        self.containerView.addSubview(webView)
+        self.webView = webView
         
         let url = NSURL(string: "https://google.com/")
         let request = NSURLRequest(URL: url!)
@@ -35,6 +44,56 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISe
         self.webView.allowsBackForwardNavigationGestures = true
         self.webView.addObserver(self, forKeyPath: NSStringFromSelector(Selector("estimatedProgress")), options:.New, context: &IDSurfContext)
     }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.updateToolbar()
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        
+        print("didReceiveMemoryWarning")
+    }
+    
+    deinit {
+        self.webView.UIDelegate = nil
+        self.webView.navigationDelegate = nil
+        self.webView.stopLoading()
+        
+        if self.isViewLoaded() {
+            self.webView.removeObserver(self, forKeyPath: NSStringFromSelector(Selector("estimatedProgress")))
+        }
+    }
+    
+    //MARK:- Navigation
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "ShowHistorySegue" {
+            let historyVC = (segue.destinationViewController as! UINavigationController).viewControllers.first as? HistoryViewController
+            historyVC?.urls = self.visitedURL
+            historyVC?.delegate = self
+        }
+    }
+    
+    @IBAction func unwindToBrowser(sender: UIStoryboardSegue) {
+    }
+    
+    //MARK:- UIBarButtonItem actions
+    
+    @IBAction func back(sender: AnyObject) {
+        self.webView.goBack()
+        self.updateToolbar()
+    }
+    
+    @IBAction func forward(sender: AnyObject) {
+        self.webView.goForward()
+        self.updateToolbar()
+    }
+    
+    
+    //MARK:- KVO
     
     override func observeValueForKeyPath(keyPath: String!, ofObject object: AnyObject!, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         if keyPath == NSStringFromSelector(Selector("estimatedProgress")) && self.webView == object as? WKWebView {
@@ -60,32 +119,41 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISe
         }
     }
     
+    //MARK:- HistoryViewControllerDelegate
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    deinit {
-        self.webView?.UIDelegate = nil
-        self.webView?.navigationDelegate
-        self.webView!.stopLoading()
-        
-        if self.isViewLoaded() {
-            self.webView.removeObserver(self, forKeyPath: NSStringFromSelector(Selector("estimatedProgress")))
+    func didSelectUrlFromHistory(url: NSURL) {
+        dispatch_async(dispatch_get_main_queue()) { 
+            let request = NSURLRequest(URL: url)
+            self.webView.loadRequest(request)
         }
     }
     
     //MARK:- UISearchBarDelegate
     
+    func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
+        searchBar.showsCancelButton = true
+        for view in searchBar.subviews as [UIView] {
+            for subview in view.subviews as [UIView] {
+                if let textField = subview as? UITextField {
+                    textField.performSelector(#selector(NSObject.selectAll(_:)), withObject: nil, afterDelay: 0.0)
+                }
+            }
+        }
+    }
+    
+    func searchBarTextDidEndEditing(searchBar: UISearchBar) {
+        searchBar.showsCancelButton = false
+    }
+    
     func searchBarSearchButtonClicked(searchBar: UISearchBar) {
-        self.searchBar.resignFirstResponder()
-        let text = self.searchBar.text
+        searchBar.resignFirstResponder()
+        
+        let text = searchBar.text
         
         var url:NSURL? = NSURL(string: text!)
         if url == nil {
             let escapedPath = text!.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLHostAllowedCharacterSet())
-            url = NSURL(string: "https://www.google.com/?#q=\(escapedPath!)")
+            url = NSURL(string: "https://google.com/?#q=\(escapedPath!)")
         }
         else {
             if !self.validateUrl(text) {
@@ -100,19 +168,47 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISe
     //MARK:- WKNavigationDelegate
     
     func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: NSError) {
-        print(error.localizedDescription)
+        print("FailProvisionalNavigation: \(error.localizedDescription)")
+        
+        if (error.code == NSURLErrorNotConnectedToInternet){
+            webView.loadHTMLString("No connection", baseURL:  nil)
+        }
+
+        self.updateToolbar()
     }
+    
     func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        print("Start to load")
+        self.updateToolbar()
     }
+    
     func webView(webView: WKWebView, didFinishNavigation navigation: WKNavigation!) {
-        print("Finish to load")
+        if let url = self.webView.URL {
+            if !self.isAlreadyVisited(url) {
+                self.visitedURL.append((url: url, title:webView.title))
+            }
+        }
+        self.updateToolbar()
+    }
+    
+    func webView(webView: WKWebView, didFailNavigation navigation: WKNavigation!, withError error: NSError) {
+        self.updateToolbar()
     }
     
     //MARK:- Private
     
-    func validateUrl(urlString: String?) -> Bool {
+    private func updateToolbar() {
+        self.backButton.enabled = self.webView.canGoBack
+        self.forwardButton.enabled = self.webView.canGoForward
+    }
+    
+    private func validateUrl(urlString: String?) -> Bool {
         let urlRegEx = "(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+"
         return NSPredicate(format: "SELF MATCHES %@", urlRegEx).evaluateWithObject(urlString)
+    }
+    
+    private func isAlreadyVisited(url: NSURL) -> Bool {
+        return self.visitedURL.contains { (item) -> Bool in
+            return item.url.absoluteString == url.absoluteString
+        }
     }
 }

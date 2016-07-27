@@ -23,7 +23,10 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="m26-Ai-spL"/>
                                 </constraints>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" keyboardType="webSearch" returnKeyType="search"/>
+                                <scopeButtonTitles>
+                                    <string>Title</string>
+                                </scopeButtonTitles>
                                 <connections>
                                     <outlet property="delegate" destination="BYZ-38-t0r" id="wRr-LB-r3a"/>
                                 </connections>
@@ -51,10 +54,22 @@
                                     <constraint firstAttribute="height" constant="44" id="MHr-M1-I3I"/>
                                 </constraints>
                                 <items>
-                                    <barButtonItem title="&lt;" width="35" id="wUX-BL-ITf"/>
-                                    <barButtonItem title="&gt;" width="35" id="luT-2K-pDW"/>
+                                    <barButtonItem title="&lt;" width="35" id="wUX-BL-ITf">
+                                        <connections>
+                                            <action selector="back:" destination="BYZ-38-t0r" id="y0B-Td-4cF"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem title="&gt;" width="35" id="luT-2K-pDW">
+                                        <connections>
+                                            <action selector="forward:" destination="BYZ-38-t0r" id="3fy-SO-jzT"/>
+                                        </connections>
+                                    </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="5Ka-SY-ThQ"/>
-                                    <barButtonItem systemItem="bookmarks" id="jm3-e8-LeD"/>
+                                    <barButtonItem systemItem="bookmarks" id="jm3-e8-LeD">
+                                        <connections>
+                                            <segue destination="WQe-iE-LBY" kind="presentation" identifier="ShowHistorySegue" id="nag-mH-t5C"/>
+                                        </connections>
+                                    </barButtonItem>
                                 </items>
                             </toolbar>
                         </subviews>
@@ -80,15 +95,83 @@
                     </view>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <connections>
+                        <outlet property="backButton" destination="wUX-BL-ITf" id="d2d-gd-Cob"/>
                         <outlet property="containerView" destination="zob-fz-qo6" id="wLE-nf-KZI"/>
+                        <outlet property="forwardButton" destination="luT-2K-pDW" id="NES-Uy-UjQ"/>
+                        <outlet property="historyButton" destination="jm3-e8-LeD" id="6QV-VP-yD6"/>
                         <outlet property="progressView" destination="2Pd-0d-XNs" id="qEP-Mg-LLi"/>
                         <outlet property="searchBar" destination="HPI-UW-3W3" id="p3m-28-VGV"/>
                         <outlet property="toolBar" destination="5vX-hn-ttF" id="eci-Cq-9lC"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <exit id="oxv-8q-cSf" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="565" y="490"/>
+        </scene>
+        <!--History-->
+        <scene sceneID="D4O-bD-ihK">
+            <objects>
+                <tableViewController extendedLayoutIncludesOpaqueBars="YES" id="3UF-9z-1zJ" customClass="HistoryViewController" customModule="IDSurf" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="2pN-03-QlM">
+                        <rect key="frame" x="0.0" y="64" width="320" height="416"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <prototypes>
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="historyCell" textLabel="X7F-39-SEK" style="IBUITableViewCellStyleDefault" id="hAd-Wc-4Fu">
+                                <rect key="frame" x="0.0" y="28" width="320" height="44"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="hAd-Wc-4Fu" id="fnG-ZB-Urj">
+                                    <rect key="frame" x="0.0" y="0.0" width="320" height="43.5"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="X7F-39-SEK">
+                                            <rect key="frame" x="15" y="0.0" width="290" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                    </subviews>
+                                </tableViewCellContentView>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="3UF-9z-1zJ" id="AOg-Kx-YHo"/>
+                            <outlet property="delegate" destination="3UF-9z-1zJ" id="WM5-5k-Gf4"/>
+                        </connections>
+                    </tableView>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <toolbarItems/>
+                    <navigationItem key="navigationItem" title="History" id="VPK-B7-FaS">
+                        <barButtonItem key="rightBarButtonItem" style="done" systemItem="done" id="B1A-CA-XV7">
+                            <connections>
+                                <segue destination="oxv-8q-cSf" kind="unwind" unwindAction="unwindToBrowser:" id="l8N-QR-76x"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="bxl-Lv-y0Y" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1438" y="490"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="r0j-qa-NQ8">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="WQe-iE-LBY" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="2bR-4Y-6ax">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="3UF-9z-1zJ" kind="relationship" relationship="rootViewController" id="QDm-h3-L9H"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Eku-je-R5v" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="998" y="490"/>
         </scene>
     </scenes>
 </document>
