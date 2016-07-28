@@ -13,6 +13,9 @@ private var IDSurfContext = 0
 
 class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UISearchBarDelegate, HistoryViewControllerDelegate {
     
+    private let kFirstURL = "https://google.com/"
+    private let kHistoryDefaultsKey = "history"
+    
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var progressView: UIProgressView!
@@ -37,12 +40,18 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
         self.containerView.addSubview(webView)
         self.webView = webView
         
-        let url = NSURL(string: "https://google.com/")
+        let url = NSURL(string: kFirstURL)
         let request = NSURLRequest(URL: url!)
         
         self.webView.loadRequest(request)
         self.webView.allowsBackForwardNavigationGestures = true
         self.webView.addObserver(self, forKeyPath: NSStringFromSelector(Selector("estimatedProgress")), options:.New, context: &IDSurfContext)
+        
+        self.visitedURL = self.historyFromDefaults()
+        
+        NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationWillResignActiveNotification, object: nil, queue: NSOperationQueue.mainQueue(), usingBlock: { [unowned self] (notification: NSNotification) -> (Void) in
+            self.saveHistory()
+            })
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -210,5 +219,36 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
         return self.visitedURL.contains { (item) -> Bool in
             return item.url.absoluteString == url.absoluteString
         }
+    }
+    
+    private func historyFromDefaults() -> [(url:NSURL, title: String?)] {
+        let defaults = NSUserDefaults.standardUserDefaults()
+        let data = defaults.objectForKey(kHistoryDefaultsKey)
+        var urls: [(url:NSURL, title: String?)] = []
+        if let data = data {
+            
+            let urlsDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data as! NSData) as! NSDictionary
+            urlsDictionary.enumerateKeysAndObjectsUsingBlock { (key, object, stop) in
+                urls.append((url: object as! NSURL, title: key as? String))
+            }
+        }
+        return urls
+    }
+    
+    private func saveHistory() {
+        guard self.visitedURL.count > 0 else { return }
+        
+        let defaults = NSUserDefaults.standardUserDefaults()
+        let historyDict = NSMutableDictionary()
+        
+        for historyItem in self.visitedURL {
+            let key = historyItem.title != nil ? historyItem.title! : historyItem.url.absoluteString
+            historyDict.setValue(historyItem.url, forKey: key)
+        }
+        
+        let data = NSKeyedArchiver.archivedDataWithRootObject(historyDict)
+        
+        defaults.setObject(data, forKey:self.kHistoryDefaultsKey)
+        defaults.synchronize()
     }
 }
