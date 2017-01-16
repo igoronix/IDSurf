@@ -27,7 +27,7 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     
     weak var webView : WKWebView!
     
-    var visitedURL: [(url:NSURL, title: String?)] = []
+    var visitedURL: [(url:URL, title: String?)] = []
     
     //MARK:- ViewController lifecycle
     
@@ -35,26 +35,26 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
         super.viewDidLoad()
         
         let webView = WKWebView(frame: self.containerView.bounds, configuration: WKWebViewConfiguration())
-        webView.UIDelegate = self
+        webView.uiDelegate = self
         webView.navigationDelegate = self
         self.containerView.addSubview(webView)
         self.webView = webView
         
-        let url = NSURL(string: kFirstURL)
-        let request = NSURLRequest(URL: url!)
+        let url = URL(string: kFirstURL)
+        let request = URLRequest(url: url!)
         
-        self.webView.loadRequest(request)
+        self.webView.load(request)
         self.webView.allowsBackForwardNavigationGestures = true
-        self.webView.addObserver(self, forKeyPath: NSStringFromSelector(Selector("estimatedProgress")), options:.New, context: &IDSurfContext)
+        self.webView.addObserver(self, forKeyPath: NSStringFromSelector(#selector(getter: WKWebView.estimatedProgress)), options:.new, context: &IDSurfContext)
         
         self.visitedURL = self.historyFromDefaults()
         
-        NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationWillResignActiveNotification, object: nil, queue: NSOperationQueue.mainQueue(), usingBlock: { [unowned self] (notification: NSNotification) -> (Void) in
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.UIApplicationWillResignActive, object: nil, queue: OperationQueue.main, using: { [unowned self] (notification: Notification) -> (Void) in
             self.saveHistory()
             })
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         self.updateToolbar()
@@ -67,36 +67,36 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     }
     
     deinit {
-        self.webView.UIDelegate = nil
+        self.webView.uiDelegate = nil
         self.webView.navigationDelegate = nil
         self.webView.stopLoading()
         
-        if self.isViewLoaded() {
-            self.webView.removeObserver(self, forKeyPath: NSStringFromSelector(Selector("estimatedProgress")))
+        if self.isViewLoaded {
+            self.webView.removeObserver(self, forKeyPath: NSStringFromSelector(#selector(getter: WKWebView.estimatedProgress)))
         }
     }
     
     //MARK:- Navigation
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowHistorySegue" {
-            let historyVC = (segue.destinationViewController as! UINavigationController).viewControllers.first as? HistoryViewController
-            historyVC?.urls = self.visitedURL
+            let historyVC = (segue.destination as! UINavigationController).viewControllers.first as? HistoryViewController
+            historyVC?.urls = self.visitedURL;
             historyVC?.delegate = self
         }
     }
     
-    @IBAction func unwindToBrowser(sender: UIStoryboardSegue) {
+    @IBAction func unwindToBrowser(_ sender: UIStoryboardSegue) {
     }
     
     //MARK:- UIBarButtonItem actions
     
-    @IBAction func back(sender: AnyObject) {
+    @IBAction func back(_ sender: AnyObject) {
         self.webView.goBack()
         self.updateToolbar()
     }
     
-    @IBAction func forward(sender: AnyObject) {
+    @IBAction func forward(_ sender: AnyObject) {
         self.webView.goForward()
         self.updateToolbar()
     }
@@ -104,14 +104,14 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     
     //MARK:- KVO
     
-    override func observeValueForKeyPath(keyPath: String!, ofObject object: AnyObject!, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if keyPath == NSStringFromSelector(Selector("estimatedProgress")) && self.webView == object as? WKWebView {
+    override func observeValue(forKeyPath keyPath: String!, of object: Any!, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == NSStringFromSelector(#selector(getter: WKWebView.estimatedProgress)) && self.webView == object as? WKWebView {
             self.progressView.alpha = 1.0
             self.progressView.setProgress(Float(self.webView.estimatedProgress), animated: true)
             
             self.webView.evaluateJavaScript("document.title", completionHandler: { (result, error) in
                 if let _ = error {
-                    self.searchBar.text = self.webView.URL?.host
+                    self.searchBar.text = self.webView.url?.host
                 }
                 else {
                     self.searchBar.text = result as? String
@@ -119,7 +119,7 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
             })
             
             if self.webView.estimatedProgress >= 1.0 {
-                UIView.animateWithDuration(0.25, animations: {
+                UIView.animate(withDuration: 0.25, animations: {
                     self.progressView.alpha = 0.0
                     }, completion: { (finished) in
                         self.progressView.setProgress(0.0, animated: false)
@@ -130,68 +130,71 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     
     //MARK:- HistoryViewControllerDelegate
     
-    func didSelectUrlFromHistory(url: NSURL) {
-        dispatch_async(dispatch_get_main_queue()) { 
-            let request = NSURLRequest(URL: url)
-            self.webView.loadRequest(request)
+    func didSelectUrlFromHistory(_ url: URL) {
+        DispatchQueue.main.async { 
+            let request = URLRequest(url: url)
+            self.webView.load(request)
         }
     }
     
     //MARK:- UISearchBarDelegate
     
-    func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         searchBar.showsCancelButton = true
-        for view in searchBar.subviews as [UIView] {
-            for subview in view.subviews as [UIView] {
-                if let textField = subview as? UITextField {
-                    textField.performSelector(#selector(NSObject.selectAll(_:)), withObject: nil, afterDelay: 0.0)
-                }
-            }
-        }
+        
+        Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(BrowserViewController.selectSearchBarText), userInfo: nil, repeats: false)
     }
     
-    func searchBarTextDidEndEditing(searchBar: UISearchBar) {
+    func selectSearchBarText() {
+        UIApplication.shared.sendAction(#selector(UIResponderStandardEditActions.selectAll(_:)), to: nil, from: nil, for: nil)
+    }
+    
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
         searchBar.showsCancelButton = false
     }
     
-    func searchBarSearchButtonClicked(searchBar: UISearchBar) {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
         
         let text = searchBar.text
         
-        var url:NSURL? = NSURL(string: text!)
+        var url:URL? = URL(string: text!)
         if url == nil {
-            let escapedPath = text!.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLHostAllowedCharacterSet())
-            url = NSURL(string: "https://google.com/?#q=\(escapedPath!)")
+            let escapedPath = text!.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlHostAllowed)
+            url = URL(string: "https://google.com/?#q=\(escapedPath!)")
         }
         else {
             if !self.validateUrl(text) {
-                url = NSURL(string: "http://\(text!)")
+                url = URL(string: "http://\(text!)")
             }
         }
-        let request = NSURLRequest(URL: url!)
-        self.webView.loadRequest(request)
+        let request = URLRequest(url: url!)
+        self.webView.load(request)
     }
     
     
     //MARK:- WKNavigationDelegate
     
-    func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: NSError) {
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         print("FailProvisionalNavigation: \(error.localizedDescription)")
+
+//        if error.code == NSURLErrorNotConnectedToInternet {
+//            
+//        }
         
-        if (error.code == NSURLErrorNotConnectedToInternet){
-            webView.loadHTMLString("No connection", baseURL:  nil)
-        }
+//        if (error.code == NSURLErrorNotConnectedToInternet){
+//            webView.loadHTMLString("No connection", baseURL:  nil)
+//        }
 
         self.updateToolbar()
     }
     
-    func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         self.updateToolbar()
     }
     
-    func webView(webView: WKWebView, didFinishNavigation navigation: WKNavigation!) {
-        if let url = self.webView.URL {
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if let url = self.webView.url {
             if !self.isAlreadyVisited(url) {
                 self.visitedURL.append((url: url, title:webView.title))
             }
@@ -199,46 +202,46 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
         self.updateToolbar()
     }
     
-    func webView(webView: WKWebView, didFailNavigation navigation: WKNavigation!, withError error: NSError) {
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         self.updateToolbar()
     }
     
     //MARK:- Private
     
-    private func updateToolbar() {
-        self.backButton.enabled = self.webView.canGoBack
-        self.forwardButton.enabled = self.webView.canGoForward
+    fileprivate func updateToolbar() {
+        self.backButton.isEnabled = self.webView.canGoBack
+        self.forwardButton.isEnabled = self.webView.canGoForward
     }
     
-    private func validateUrl(urlString: String?) -> Bool {
+    fileprivate func validateUrl(_ urlString: String?) -> Bool {
         let urlRegEx = "(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+"
-        return NSPredicate(format: "SELF MATCHES %@", urlRegEx).evaluateWithObject(urlString)
+        return NSPredicate(format: "SELF MATCHES %@", urlRegEx).evaluate(with: urlString)
     }
     
-    private func isAlreadyVisited(url: NSURL) -> Bool {
+    fileprivate func isAlreadyVisited(_ url: URL) -> Bool {
         return self.visitedURL.contains { (item) -> Bool in
             return item.url.absoluteString == url.absoluteString
         }
     }
     
-    private func historyFromDefaults() -> [(url:NSURL, title: String?)] {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        let data = defaults.objectForKey(kHistoryDefaultsKey)
-        var urls: [(url:NSURL, title: String?)] = []
+    fileprivate func historyFromDefaults() -> [(url:URL, title: String?)] {
+        let defaults = UserDefaults.standard
+        let data = defaults.object(forKey: kHistoryDefaultsKey)
+        var urls: [(url:URL, title: String?)] = []
         if let data = data {
             
-            let urlsDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data as! NSData) as! NSDictionary
-            urlsDictionary.enumerateKeysAndObjectsUsingBlock { (key, object, stop) in
-                urls.append((url: object as! NSURL, title: key as? String))
-            }
+            let urlsDictionary = NSKeyedUnarchiver.unarchiveObject(with: data as! Data) as! NSDictionary
+            urlsDictionary.enumerateKeysAndObjects({ (key, object, stop) in
+                urls.append((url: object as! URL, title: key as? String));
+            });
         }
         return urls
     }
     
-    private func saveHistory() {
+    fileprivate func saveHistory() {
         guard self.visitedURL.count > 0 else { return }
         
-        let defaults = NSUserDefaults.standardUserDefaults()
+        let defaults = UserDefaults.standard
         let historyDict = NSMutableDictionary()
         
         for historyItem in self.visitedURL {
@@ -246,9 +249,9 @@ class BrowserViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
             historyDict.setValue(historyItem.url, forKey: key)
         }
         
-        let data = NSKeyedArchiver.archivedDataWithRootObject(historyDict)
+        let data = NSKeyedArchiver.archivedData(withRootObject: historyDict)
         
-        defaults.setObject(data, forKey:self.kHistoryDefaultsKey)
+        defaults.set(data, forKey:self.kHistoryDefaultsKey)
         defaults.synchronize()
     }
 }

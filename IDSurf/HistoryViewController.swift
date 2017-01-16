@@ -10,29 +10,29 @@ import UIKit
 import WebKit
 
 protocol HistoryViewControllerDelegate: class {
-    func didSelectUrlFromHistory(url:NSURL)
+    func didSelectUrlFromHistory(_ url:URL)
 }
 
 
 class HistoryViewController: UITableViewController {
     
-    private let kHistoryCellID = "historyCell"
+    fileprivate let kHistoryCellID = "historyCell"
     
-    var urls: [(url:NSURL, title: String?)] = []
+    var urls: [(url:URL, title: String?)] = []
     weak var delegate: HistoryViewControllerDelegate?
 
     // MARK: - Table view data source
 
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
 
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.urls.count
     }
 
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(kHistoryCellID, forIndexPath: indexPath)
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: kHistoryCellID, for: indexPath)
 
         let item = self.urls[indexPath.row]
         cell.textLabel?.text = item.title
@@ -41,10 +41,10 @@ class HistoryViewController: UITableViewController {
         return cell
     }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = self.urls[indexPath.row]
         self.delegate?.didSelectUrlFromHistory(item.url)
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
-        self.dismissViewControllerAnimated(true, completion: nil)
+        tableView.deselectRow(at: indexPath, animated: true)
+        self.dismiss(animated: true, completion: nil)
     }
 }
